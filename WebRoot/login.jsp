@@ -8,7 +8,7 @@
   
   <body>
   	<form action="login.do" method="post">  
-    username:<input type="text" name="username" />  
+    username:<input type="text" name="loginId" />  
     <p>  
     password:<input type="password" name="password"/>  
     <p>  

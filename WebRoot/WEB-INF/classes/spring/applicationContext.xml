@@ -10,6 +10,102 @@
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd  
        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd  
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<!-- 这里配置数据库properties文件位置 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+
+	<!--  数据源配置 -->
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${db.driverClassName}" />
+		<property name="url" value="${db.url}" />
+		<property name="username" value="${db.username}" />
+		<property name="password" value="${db.password}" />
+		<property name="maxActive" value="${dataSource.maxActive}" />
+		<property name="maxIdle" value="${dataSource.maxIdle}" />
+		<property name="minIdle" value="${dataSource.minIdle}" />
+		<property name="maxWait" value="${dataSource.maxWait}" />
+		<property name="defaultAutoCommit"
+			value="${dataSource.defaultAutoCommit}" />
+		<property name="removeAbandoned"
+			value="${dataSource.removeAbandoned}" />
+		<property name="removeAbandonedTimeout"
+			value="${dataSource.removeAbandonedTimeout}" />
+		<property name="logAbandoned"
+			value="${dataSource.logAbandoned}" />
+		<property name="testWhileIdle"
+			value="${dataSource.testWhileIdle}" />
+		<property name="testOnBorrow"
+			value="${dataSource.testOnBorrow}" />
+		<property name="testOnReturn"
+			value="${dataSource.testOnReturn}" />
+		<property name="validationQuery"
+			value="SELECT COUNT(1) FROM DUAL" />
+		<property name="timeBetweenEvictionRunsMillis" value="30000" />
+		<property name="numTestsPerEvictionRun"
+			value="${dataSource.maxActive}" />
+		<property name="minEvictableIdleTimeMillis" value="1800000" />
+	</bean>
 	
+	<!-- 扫描除controller外的所有组件 -->
+	<context:component-scan base-package="com.bathtub">
+		<context:exclude-filter
+			expression="org.springframework.stereotype.Controller"
+			type="annotation" />
+	</context:component-scan>
+
+	<!-- Hibernate 配置 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					${db.Dialect.prefix}.${db.Dialect.suffix}
+				</prop>
+				<prop key="hibernate.query.substitutions">
+					true '1', false '0'
+				</prop>
+				<prop key="hibernate.validator.apply_to_ddl">
+					false
+				</prop>
+				<prop
+					key="hibernate.validator.autoregister_listeners">
+					false
+				</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.use_sql_comments">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+				<prop key="hibernate.cglib.use_reflection_optimizer">
+					true
+				</prop>
+				<!-- 配置对应getCurrentSession()方法 -->
+				<prop key="hibernate.current_session_context_class">
+					org.springframework.orm.hibernate4.SpringSessionContext
+				</prop>
+				<prop key="jdbc.use_scrollable_resultset">false</prop>
+			</props>
+		</property>
+		<property name="packagesToScan">
+			<list>
+				<value>com.bathtub.**.entity</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 事务管理器配置,单数据源事务 定义事务管理器（声明式的事务）-->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+		<!-- 支持嵌套事务 -->
+		<property name="nestedTransactionAllowed" value="true"></property>
+	</bean>
+
+	<!-- 使用annotation定义事务 使用@Transactional注解完成事务管理 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
 </beans>
 
